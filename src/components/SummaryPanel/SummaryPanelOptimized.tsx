@@ -1,20 +1,23 @@
 import React, { useMemo, useCallback } from "react";
 import { Box, Typography, Paper, Divider, Chip } from "@mui/material";
 import { ProductData, ColorZone } from "../../interfaces/ProductData";
-import { ColorService } from "../../services/ColorService";
-import { ColorServiceFactory } from "../../services/ColorPalette";
-import { StatisticsService, StatisticsServiceFactory, ColorStats } from "../../services/StatisticsService";
+import { calculateCellColor, colorMap, colorNames } from "../../utils/colorUtils";
 
 interface SummaryPanelProps {
   data: ProductData[];
   selectedDate?: string;
-  colorService?: ColorService; // Principio de Inversión de Dependencias
-  statisticsService?: StatisticsService; // Principio de Inversión de Dependencias
+}
+
+/**
+ * Estructura para estadísticas de colores optimizada
+ */
+interface ColorStats {
+  count: number;
+  percentage: string;
 }
 
 /**
  * Función para formatear fecha de manera consistente
- * Principio de Responsabilidad Única: Solo se encarga del formateo de fechas
  */
 const formatDateForDisplay = (dateString: string): string => {
   try {
@@ -29,14 +32,49 @@ const formatDateForDisplay = (dateString: string): string => {
 };
 
 /**
+ * Función para calcular estadísticas de colores optimizada
+ */
+const calculateColorStats = (data: ProductData[], selectedDate: string) => {
+  const stats: Record<ColorZone, ColorStats> = {
+    red: { count: 0, percentage: "0%" },
+    yellow: { count: 0, percentage: "0%" },
+    green: { count: 0, percentage: "0%" },
+    black: { count: 0, percentage: "0%" },
+    blue: { count: 0, percentage: "0%" }
+  };
+  
+  const filteredData = data.filter(item => item.VisibleForecastedDate === selectedDate);
+  
+  // Contar cada color
+  for (const item of filteredData) {
+    const color = calculateCellColor(
+      item.NetFlow,
+      item.MakeToOrder,
+      item.RedZone,
+      item.YellowZone,
+      item.GreenZone
+    );
+    stats[color].count++;
+  }
+  
+  // Calcular porcentajes
+  const total = filteredData.length;
+  if (total > 0) {
+    for (const color of Object.keys(stats) as ColorZone[]) {
+      stats[color].percentage = `${((stats[color].count / total) * 100).toFixed(1)}%`;
+    }
+  }
+  
+  return { stats, total };
+};
+
+/**
  * Componente optimizado para mostrar estadísticas de color individual
- * Principio de Responsabilidad Única: Solo renderiza estadísticas de un color
  */
 const ColorStatChip: React.FC<{
   color: ColorZone;
   stats: ColorStats;
-  colorService: ColorService;
-}> = React.memo(({ color, stats, colorService }) => (
+}> = React.memo(({ color, stats }) => (
   <Box sx={{ 
     display: 'flex', 
     flexDirection: 'column', 
@@ -44,7 +82,7 @@ const ColorStatChip: React.FC<{
     minWidth: 120,
     p: 2,
     borderRadius: 2,
-    backgroundColor: colorService.getBackgroundColor(color),
+    backgroundColor: colorMap[color],
     border: '1px solid rgba(0, 0, 0, 0.08)',
     transition: 'all 0.2s ease',
     '&:hover': {
@@ -53,7 +91,7 @@ const ColorStatChip: React.FC<{
     }
   }}>
     <Chip 
-      label={colorService.getColorName(color)} 
+      label={colorNames[color]} 
       size="small"
       sx={{ 
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -81,19 +119,13 @@ const ColorStatChip: React.FC<{
 
 /**
  * Componente optimizado del Panel de Resumen
- * Refactorizado siguiendo principios SOLID
  */
-const SummaryPanel: React.FC<SummaryPanelProps> = ({ 
-  data, 
-  selectedDate,
-  colorService = ColorServiceFactory.createDefaultColorService(),
-  statisticsService = StatisticsServiceFactory.createDefaultStatisticsService(colorService)
-}) => {
-  // Memoizar cálculo de estadísticas usando el servicio
+const SummaryPanel: React.FC<SummaryPanelProps> = ({ data, selectedDate }) => {
+  // Memoizar cálculo de estadísticas
   const colorStatsData = useMemo(() => {
     if (!selectedDate) return null;
-    return statisticsService.calculateColorStats(data, selectedDate);
-  }, [data, selectedDate, statisticsService]);
+    return calculateColorStats(data, selectedDate);
+  }, [data, selectedDate]);
 
   // Memoizar componente de estado vacío
   const EmptyState = useMemo(() => (
@@ -134,10 +166,9 @@ const SummaryPanel: React.FC<SummaryPanelProps> = ({
           key={color}
           color={color}
           stats={stats}
-          colorService={colorService}
         />
       ));
-  }, [colorStatsData, colorService]);
+  }, [colorStatsData]);
 
   if (!selectedDate || !colorStatsData) {
     return EmptyState;
