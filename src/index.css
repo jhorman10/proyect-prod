@@ -1,23 +1,155 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 body {
   margin: 0;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Inter', 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f7fa;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: 100vh;
 }
 
 .MuiDataGrid-root {
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.08);
+  border: 1px solid rgba(102, 126, 234, 0.12) !important;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
 }
 
 .MuiDataGrid-columnHeaders {
-  background-color: #2c3e50;
+  background: #667eea;
   color: white !important;
+  border-bottom: 2px solid #5a67d8 !important;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.MuiDataGrid-columnHeader {
+  border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.MuiDataGrid-columnHeader[data-field] {
+  background: #667eea !important;
+  color: white !important;
+}
+
+.MuiDataGrid-columnHeaderTitle {
+  color: white !important;
+  font-weight: 600;
+}
+
+/* Asegurar que todas las variantes del header tengan el fondo correcto */
+.css-wuh70g-MuiDataGrid-root .MuiDataGrid-columnHeader[data-field] {
+  background: #667eea !important;
+  color: white !important;
+}
+
+.MuiDataGrid-columnHeader .MuiDataGrid-columnHeaderTitle {
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+/* Estilos adicionales para asegurar legibilidad */
+.MuiDataGrid-root .MuiDataGrid-columnHeader {
+  background: #667eea !important;
+}
+
+.MuiDataGrid-root .MuiDataGrid-columnHeader * {
+  color: white !important;
+}
+
+/* Override para cualquier clase CSS específica generada */
+[class*="MuiDataGrid-root"] .MuiDataGrid-columnHeader[data-field] {
+  background: #667eea !important;
+  color: white !important;
+}
+
+[class*="MuiDataGrid-root"] .MuiDataGrid-columnHeaderTitle {
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.MuiDataGrid-cell {
+  border-right: 1px solid rgba(102, 126, 234, 0.08) !important;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.08) !important;
+  padding: 0 !important;
+  transition: all 0.2s ease;
+}
+
+.MuiDataGrid-cell:hover {
+  transform: scale(1.01);
+  z-index: 1;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.12);
 }
 
 .MuiDataGrid-cell:focus {
   outline: none !important;
+}
+
+.MuiDataGrid-row {
+  border-bottom: 1px solid rgba(102, 126, 234, 0.06) !important;
+}
+
+.MuiDataGrid-row:hover {
+  background-color: rgba(102, 126, 234, 0.02) !important;
+}
+
+/* Estilos para columna seleccionada */
+.MuiDataGrid-columnHeader--sorted {
+  background: #5a67d8 !important;
+  position: relative;
+}
+
+.MuiDataGrid-columnHeader--sorted::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+}
+
+.MuiDataGrid-columnHeader.Mui-focused {
+  background: #5a67d8 !important;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Resaltar columna seleccionada */
+.MuiDataGrid-columnHeader--sortable:hover {
+  background: #5865f2 !important;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* Efecto hover mejorado para todos los headers */
+.MuiDataGrid-columnHeader:hover {
+  background: #5865f2 !important;
+  transition: all 0.2s ease;
+}
+
+.MuiDataGrid-columnHeader:hover .MuiDataGrid-columnHeaderTitle {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+/* Animación para indicador de columna activa */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.MuiDataGrid-columnHeader[data-field] .MuiDataGrid-columnHeaderTitle::before {
+  animation: pulse 2s infinite;
+}
+
+/* Mejorar la visibilidad de la selección */
+.MuiDataGrid-columnHeader[data-field]:active {
+  background: #4c51bf !important;
+  transform: scale(0.98);
+  transition: all 0.1s ease;
 }

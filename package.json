@@ -1,13 +1,15 @@
 {
-  "name": "proyect-prod",
+  "name": "sistema-proyeccion-inventario",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Sistema de Proyección de Inventario - Ejercicio Práctico React",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "yarn dev"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

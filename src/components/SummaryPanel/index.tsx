@@ -48,51 +48,127 @@ const SummaryPanel: React.FC<SummaryPanelProps> = ({ data, selectedDate }) => {
 
   if (!selectedDate) {
     return (
-      <Paper elevation={3} sx={{ p: 3, mt: 3, textAlign: "center" }}>
-        <Typography variant="h6" color="textSecondary">
-          Seleccione una columna de fecha para ver el resumen
+      <Paper elevation={0} sx={{ 
+        p: 4, 
+        mt: 4, 
+        textAlign: "center",
+        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
+        border: '1px solid rgba(102, 126, 234, 0.12)',
+        borderRadius: 3
+      }}>
+        <Typography variant="h6" sx={{ 
+          color: 'primary.main',
+          fontWeight: 600,
+          mb: 1
+        }}>
+          📊 Resumen de Proyección
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ 
+          mt: 1,
+          fontSize: '0.95rem',
+          lineHeight: 1.5
+        }}>
+          Haga clic en el encabezado de una columna de fecha para ver el resumen estadístico
         </Typography>
       </Paper>
     );
   }
 
   return (
-    <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        Resumen para {new Date(selectedDate).toLocaleDateString()}
+    <Paper elevation={0} sx={{ 
+      p: 4, 
+      mt: 4,
+      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%)',
+      border: '1px solid rgba(102, 126, 234, 0.12)',
+      borderRadius: 3
+    }}>
+      <Typography variant="h6" gutterBottom sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: 1,
+        color: 'primary.main',
+        fontWeight: 600,
+        mb: 1
+      }}>
+        📊 Resumen para {new Date(selectedDate).toLocaleDateString('es-ES', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        })}
       </Typography>
-      <Divider sx={{ my: 2 }} />
+      <Typography variant="body2" color="text.secondary" gutterBottom sx={{
+        fontSize: '0.95rem',
+        mb: 3
+      }}>
+        Cantidad de productos y porcentaje por zona de riesgo
+      </Typography>
+      <Divider sx={{ my: 2, opacity: 0.6 }} />
       
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
         {(Object.entries(colorStats!) as [ColorZone, { count: number; percentage: string }][])
           .map(([color, stats]) => (
             <Paper 
               key={color} 
+              elevation={0}
               sx={{ 
-                p: 2, 
+                p: 3, 
                 flex: 1, 
-                minWidth: 150,
+                minWidth: 160,
                 backgroundColor: colorMap[color],
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "center"
+                alignItems: "center",
+                border: '2px solid rgba(102, 126, 234, 0.1)',
+                borderRadius: 2,
+                transition: 'all 0.3s ease',
+                cursor: 'pointer',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: '0 8px 25px rgba(0, 0, 0, 0.1)',
+                  borderColor: 'primary.main'
+                }
               }}
             >
-              <Typography variant="subtitle1" fontWeight="bold">
+              <Typography variant="subtitle1" fontWeight={600} sx={{ 
+                color: color === 'yellow' ? '#d69e2e' : 
+                       color === 'red' ? '#c53030' :
+                       color === 'green' ? '#38a169' :
+                       color === 'blue' ? '#3182ce' : '#4a5568',
+                mb: 1,
+                fontSize: '1rem'
+              }}>
                 {colorNames[color]}
               </Typography>
-              <Typography variant="h5" my={1}>
+              <Typography variant="h4" sx={{ 
+                my: 1, 
+                color: 'primary.main', 
+                fontWeight: 700,
+                fontSize: '2.5rem'
+              }}>
                 {stats.count}
               </Typography>
               <Chip 
                 label={stats.percentage} 
-                color="default"
-                size="small"
-                sx={{ backgroundColor: "rgba(255,255,255,0.7)" }}
+                sx={{ 
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '0.875rem'
+                }}
               />
             </Paper>
           ))}
       </Box>
+      
+      <Typography variant="caption" color="text.secondary" sx={{ 
+        mt: 3, 
+        display: 'block',
+        textAlign: 'center',
+        fontSize: '0.875rem',
+        opacity: 0.8
+      }}>
+        Total de productos en esta fecha: {colorStats ? Object.values(colorStats).reduce((acc, stat) => acc + stat.count, 0) : 0}
+      </Typography>
     </Paper>
   );
 };
