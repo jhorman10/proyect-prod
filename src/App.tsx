@@ -1,99 +1,36 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React from "react";
 import { Container, CssBaseline, Typography, Box } from "@mui/material";
 import ProjectionGrid from "./components/ProjectionGrid";
 import SummaryPanel from "./components/SummaryPanel";
-import useProjectionData from "./hooks/useProjectionData";
-import { ColorServiceFactory } from "./services/ColorPalette";
-import { StatisticsServiceFactory } from "./services/StatisticsService";
+import { useApp } from "./hooks/useApp";
 
 /**
- * Componente principal optimizado de la aplicación
+ * Componente principal de la aplicación - Completamente presentacional
  * Refactorizado siguiendo principios SOLID
+ * Toda la lógica está delegada al hook useApp
  */
 const App: React.FC = () => {
-  const { data, updateMakeToOrder, metrics, isLoading, error } = useProjectionData();
-  const [selectedDate, setSelectedDate] = useState<string | undefined>();
-
-  // Servicios configurados usando Factory Pattern (Principio de Inversión de Dependencias)
-  const colorService = useMemo(() => ColorServiceFactory.createDefaultColorService(), []);
-  const statisticsService = useMemo(() => StatisticsServiceFactory.createDefaultStatisticsService(colorService), [colorService]);
-
-  // Optimizar handler de edición de celdas
-  const handleCellEdit = useCallback((id: string, value: number) => {
-    updateMakeToOrder(id, value);
-  }, [updateMakeToOrder]);
-
-  // Optimizar handler de selección de columna
-  const handleColumnSelect = useCallback((date: string) => {
-    setSelectedDate(date);
-  }, []);
-
-  // Memoizar estilos del título
-  const titleStyles = useMemo(() => ({
-    fontWeight: 700,
-    color: 'primary.main',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 2,
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text'
-  }), []);
-
-  // Memoizar estilos de las instrucciones
-  const instructionStyles = useMemo(() => ({
-    backgroundColor: 'rgba(102, 126, 234, 0.04)',
-    p: 3,
-    borderRadius: 2,
-    border: '1px solid rgba(102, 126, 234, 0.12)',
-    fontSize: '0.95rem',
-    lineHeight: 1.6
-  }), []);
-
-  // Componente de loading optimizado
-  const LoadingState = useMemo(() => (
-    <Box sx={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      height: 400,
-      flexDirection: 'column',
-      gap: 2
-    }}>
-      <Typography variant="h6" color="primary.main">
-        📊 Cargando datos de proyección...
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        Procesando {metrics?.totalProducts || 0} productos
-      </Typography>
-    </Box>
-  ), [metrics?.totalProducts]);
-
-  // Componente de error optimizado
-  const ErrorState = useMemo(() => (
-    <Box sx={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      height: 400,
-      flexDirection: 'column',
-      gap: 2
-    }}>
-      <Typography variant="h6" color="error.main">
-        ⚠️ Error al cargar los datos
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        {error}
-      </Typography>
-    </Box>
-  ), [error]);
+  // Toda la lógica está encapsulada en el hook personalizado
+  const {
+    data,
+    metrics,
+    error,
+    selectedDate,
+    colorService,
+    statisticsService,
+    handleCellEdit,
+    handleColumnSelect,
+    styles,
+    shouldShowError,
+    shouldShowLoading,
+    shouldShowContent
+  } = useApp();
 
   return (
     <Container maxWidth="xl">
       <CssBaseline />
       <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={titleStyles}>
+        <Typography variant="h4" component="h1" gutterBottom sx={styles.title}>
           📈 Sistema de Proyección de Inventario
         </Typography>
         <Typography variant="subtitle1" color="text.secondary" sx={{ 
@@ -117,19 +54,37 @@ const App: React.FC = () => {
           </Typography>
         )}
         
-        <Typography variant="body2" color="text.secondary" sx={instructionStyles}>
+        <Typography variant="body2" color="text.secondary" sx={styles.instructions}>
           💡 <strong>Instrucciones:</strong> Haga clic en cualquier celda para editar el valor de "Pedido de Abastecimiento". 
           Los colores se actualizan automáticamente según las zonas de riesgo. 
           Seleccione una columna de fecha para ver el resumen estadístico.
         </Typography>
       </Box>
 
-      {/* Renderizado condicional optimizado */}
-      {error ? (
-        ErrorState
-      ) : isLoading ? (
-        LoadingState
-      ) : (
+      {/* Renderizado condicional optimizado - Estados presentacionales puros */}
+      {shouldShowError && (
+        <Box sx={styles.errorContainer}>
+          <Typography variant="h6" color="error.main">
+            ⚠️ Error al cargar los datos
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {error}
+          </Typography>
+        </Box>
+      )}
+
+      {shouldShowLoading && (
+        <Box sx={styles.loadingContainer}>
+          <Typography variant="h6" color="primary.main">
+            📊 Cargando datos de proyección...
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Procesando {metrics?.totalProducts || 0} productos
+          </Typography>
+        </Box>
+      )}
+
+      {shouldShowContent && (
         <>
           <ProjectionGrid 
             data={data} 

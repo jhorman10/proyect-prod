@@ -1,9 +1,9 @@
-import React, { useMemo, useCallback } from "react";
+import React from "react";
 import { Box, Typography, Paper, Divider, Chip } from "@mui/material";
-import { ProductData, ColorZone } from "../../interfaces/ProductData";
+import { ProductData } from "../../interfaces/ProductData";
 import { ColorService } from "../../services/ColorService";
-import { ColorServiceFactory } from "../../services/ColorPalette";
-import { StatisticsService, StatisticsServiceFactory, ColorStats } from "../../services/StatisticsService";
+import { StatisticsService } from "../../services/StatisticsService";
+import { useSummaryPanel, ColorChipData } from "../../hooks/useSummaryPanel";
 
 interface SummaryPanelProps {
   data: ProductData[];
@@ -13,30 +13,14 @@ interface SummaryPanelProps {
 }
 
 /**
- * Función para formatear fecha de manera consistente
- * Principio de Responsabilidad Única: Solo se encarga del formateo de fechas
- */
-const formatDateForDisplay = (dateString: string): string => {
-  try {
-    return new Date(dateString).toLocaleDateString('es-ES', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-  } catch {
-    return dateString;
-  }
-};
-
-/**
  * Componente optimizado para mostrar estadísticas de color individual
  * Principio de Responsabilidad Única: Solo renderiza estadísticas de un color
  */
-const ColorStatChip: React.FC<{
-  color: ColorZone;
-  stats: ColorStats;
-  colorService: ColorService;
-}> = React.memo(({ color, stats, colorService }) => (
+const ColorStatChip: React.FC<ColorChipData> = React.memo(({ 
+  stats, 
+  backgroundColor, 
+  colorName 
+}) => (
   <Box sx={{ 
     display: 'flex', 
     flexDirection: 'column', 
@@ -44,7 +28,7 @@ const ColorStatChip: React.FC<{
     minWidth: 120,
     p: 2,
     borderRadius: 2,
-    backgroundColor: colorService.getBackgroundColor(color),
+    backgroundColor,
     border: '1px solid rgba(0, 0, 0, 0.08)',
     transition: 'all 0.2s ease',
     '&:hover': {
@@ -53,7 +37,7 @@ const ColorStatChip: React.FC<{
     }
   }}>
     <Chip 
-      label={colorService.getColorName(color)} 
+      label={colorName} 
       size="small"
       sx={{ 
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -81,77 +65,51 @@ const ColorStatChip: React.FC<{
 
 /**
  * Componente optimizado del Panel de Resumen
- * Refactorizado siguiendo principios SOLID
+ * Refactorizado siguiendo principios SOLID - Completamente presentacional
+ * Toda la lógica está delegada al hook useSummaryPanel
  */
 const SummaryPanel: React.FC<SummaryPanelProps> = ({ 
   data, 
   selectedDate,
-  colorService = ColorServiceFactory.createDefaultColorService(),
-  statisticsService = StatisticsServiceFactory.createDefaultStatisticsService(colorService)
+  colorService,
+  statisticsService
 }) => {
-  // Memoizar cálculo de estadísticas usando el servicio
-  const colorStatsData = useMemo(() => {
-    if (!selectedDate) return null;
-    return statisticsService.calculateColorStats(data, selectedDate);
-  }, [data, selectedDate, statisticsService]);
+  // Toda la lógica está encapsulada en el hook personalizado
+  const {
+    hasData,
+    totalProducts,
+    formattedDate,
+    colorChipsData,
+    emptyStateStyles,
+    panelStyles,
+    chipContainerStyles
+  } = useSummaryPanel(data, selectedDate, { colorService, statisticsService });
 
-  // Memoizar componente de estado vacío
-  const EmptyState = useMemo(() => (
-    <Paper elevation={0} sx={{ 
-      p: 4, 
-      mt: 4, 
-      textAlign: "center",
-      background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
-      border: '1px solid rgba(102, 126, 234, 0.12)',
-      borderRadius: 3,
-      transition: 'all 0.3s ease'
-    }}>
-      <Typography variant="h6" sx={{ 
-        color: 'primary.main',
-        fontWeight: 600,
-        mb: 1
-      }}>
-        📊 Resumen de Proyección
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ 
-        mt: 1,
-        fontSize: '0.95rem',
-        lineHeight: 1.5
-      }}>
-        Haga clic en el encabezado de una columna de fecha para ver el resumen estadístico
-      </Typography>
-    </Paper>
-  ), []);
-
-  // Renderizar chips de colores memoizados
-  const renderColorChips = useCallback(() => {
-    if (!colorStatsData) return null;
-    
-    return (Object.entries(colorStatsData.stats) as [ColorZone, ColorStats][])
-      .filter(([, stats]) => stats.count > 0) // Solo mostrar colores con datos
-      .map(([color, stats]) => (
-        <ColorStatChip 
-          key={color}
-          color={color}
-          stats={stats}
-          colorService={colorService}
-        />
-      ));
-  }, [colorStatsData, colorService]);
-
-  if (!selectedDate || !colorStatsData) {
-    return EmptyState;
+  // Estado vacío - componente presentacional puro
+  if (!hasData) {
+    return (
+      <Paper elevation={0} sx={emptyStateStyles}>
+        <Typography variant="h6" sx={{ 
+          color: 'primary.main',
+          fontWeight: 600,
+          mb: 1
+        }}>
+          📊 Resumen de Proyección
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ 
+          mt: 1,
+          fontSize: '0.95rem',
+          lineHeight: 1.5
+        }}>
+          Haga clic en el encabezado de una columna de fecha para ver el resumen estadístico
+        </Typography>
+      </Paper>
+    );
   }
 
+  // Panel con datos - componente presentacional puro
   return (
-    <Paper elevation={0} sx={{ 
-      p: 4, 
-      mt: 4,
-      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%)',
-      border: '1px solid rgba(102, 126, 234, 0.12)',
-      borderRadius: 3,
-      transition: 'all 0.3s ease'
-    }}>
+    <Paper elevation={0} sx={panelStyles}>
       <Typography variant="h6" gutterBottom sx={{ 
         display: 'flex', 
         alignItems: 'center', 
@@ -160,7 +118,7 @@ const SummaryPanel: React.FC<SummaryPanelProps> = ({
         fontWeight: 600,
         mb: 1
       }}>
-        📊 Resumen para {formatDateForDisplay(selectedDate)}
+        📊 Resumen para {formattedDate}
       </Typography>
       <Typography variant="body2" color="text.secondary" gutterBottom sx={{
         fontSize: '0.95rem',
@@ -170,14 +128,10 @@ const SummaryPanel: React.FC<SummaryPanelProps> = ({
       </Typography>
       <Divider sx={{ my: 2, opacity: 0.6 }} />
       
-      <Box sx={{ 
-        display: "flex", 
-        flexWrap: "wrap", 
-        gap: 3,
-        justifyContent: 'center',
-        alignItems: 'stretch'
-      }}>
-        {renderColorChips()}
+      <Box sx={chipContainerStyles}>
+        {colorChipsData.map((chipData, index) => (
+          <ColorStatChip key={index} {...chipData} />
+        ))}
       </Box>
       
       <Typography variant="caption" color="text.secondary" sx={{ 
@@ -188,7 +142,7 @@ const SummaryPanel: React.FC<SummaryPanelProps> = ({
         opacity: 0.8,
         fontWeight: 500
       }}>
-        Total de productos en esta fecha: <strong>{colorStatsData.total}</strong>
+        Total de productos en esta fecha: <strong>{totalProducts}</strong>
       </Typography>
     </Paper>
   );
